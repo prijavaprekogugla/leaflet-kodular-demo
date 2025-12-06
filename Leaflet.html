@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Leaflet + Kodular Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    function getParam(name, defaultValue) {
+      const params = new URLSearchParams(window.location.search);
+      return params.has(name) ? params.get(name) : defaultValue;
+    }
+
+    const lat = parseFloat(getParam('lat', '44.7866'));
+    const lng = parseFloat(getParam('lng', '20.4489'));
+    const zoom = parseInt(getParam('zoom', '13'), 10);
+
+    const map = L.map('map').setView([lat, lng], zoom);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+      .addTo(map);
+
+    L.marker([lat, lng]).addTo(map)
+      .bindPopup(`Lat: ${lat} <br> Lng: ${lng}`)
+      .openPopup();
+  </script>
+
+</body>
+</html>

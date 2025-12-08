@@ -5,9 +5,15 @@
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>Leaflet Live</title>
 
+<!-- Leaflet core -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
+<!-- Rotated marker (auto icon rotation) -->
 <script src="https://unpkg.com/leaflet-rotatedmarker/leaflet.rotatedMarker.js"></script>
+
+<!-- Leaflet rotate plugin (full map rotation) -->
+<script src="https://cdn.jsdelivr.net/npm/leaflet-rotate@0.2.0/dist/leaflet-rotate.min.js"></script>
 
 <style>
   html, body {
@@ -36,33 +42,40 @@
 
 // --- INITIAL SETUP (runs only once) ---
 
-// Initial "safe" position so the map loads normally on desktop
-var initialLat = 44.8125;   // Beograd
+// Safe default center (Beograd)
+var initialLat = 44.8125;
 var initialLng = 20.4612;
 
+// Create map with rotation enabled
 var map = L.map('map', {
-    zoomControl: false
+    zoomControl: false,
+    rotate: true,          // Enable rotation
+    rotateControl: false   // Hide rotation button
 }).setView([initialLat, initialLng], 17);
 
-// Default OpenStreetMap tile layer (works now that fallback exists)
+// Add tile layer
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 20
 }).addTo(map);
 
-// create main marker
-var marker = L.marker([initialLat, initialLng], {rotationAngle:0}).addTo(map);
+// Create main marker
+var marker = L.marker([initialLat, initialLng], { rotationAngle: 0 }).addTo(map);
 
-// --- LIVE UPDATE FROM KODULAR ---
+
+// --- UPDATE FROM KODULAR EVERY SECOND ---
 function updatePosition(lat, lng, bearing) {
 
-    // update marker location
+    // Move marker
     marker.setLatLng([lat, lng]);
 
-    // update rotation (bearing)
+    // Rotate marker (vehicle icon)
     marker.setRotationAngle(bearing);
 
-    // recenter map without animation
-    map.setView([lat, lng], map.getZoom(), {animate:false});
+    // Center map
+    map.setView([lat, lng], map.getZoom(), { animate: false });
+
+    // Rotate map so heading points upward
+    map.setBearing(bearing);
 }
 
 </script>

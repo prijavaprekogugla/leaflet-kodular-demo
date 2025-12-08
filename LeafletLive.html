@@ -10,8 +10,21 @@
 <script src="https://unpkg.com/leaflet-rotatedmarker/leaflet.rotatedMarker.js"></script>
 
 <style>
-  body, html { margin:0; padding:0; height:100%; }
-  #map { width:100%; height:100%; }
+  html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+  }
+  #map {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+  }
 </style>
 
 </head>
@@ -23,18 +36,23 @@
 
 // --- INITIAL SETUP (runs only once) ---
 
+// Initial "safe" position so the map loads normally on desktop
+var initialLat = 44.8125;   // Beograd
+var initialLng = 20.4612;
+
 var map = L.map('map', {
     zoomControl: false
-}).setView([0,0], 18);
+}).setView([initialLat, initialLng], 17);
 
+// Default OpenStreetMap tile layer (works now that fallback exists)
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 20
 }).addTo(map);
 
 // create main marker
-var marker = L.marker([0,0], {rotationAngle:0}).addTo(map);
+var marker = L.marker([initialLat, initialLng], {rotationAngle:0}).addTo(map);
 
-// this function gets called from Kodular every second
+// --- LIVE UPDATE FROM KODULAR ---
 function updatePosition(lat, lng, bearing) {
 
     // update marker location

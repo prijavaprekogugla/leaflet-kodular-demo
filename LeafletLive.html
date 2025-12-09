@@ -9,10 +9,10 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
-<!-- Rotated marker (auto icon rotation) -->
+<!-- Rotated marker plugin (rotacija ikone vozila) -->
 <script src="https://unpkg.com/leaflet-rotatedmarker/leaflet.rotatedMarker.js"></script>
 
-<!-- Leaflet rotate plugin (full map rotation) -->
+<!-- Leaflet rotate plugin (rotacija cele mape) -->
 <script src="https://cdn.jsdelivr.net/npm/leaflet-rotate@0.2.0/dist/leaflet-rotate.min.js"></script>
 
 <style>
@@ -58,11 +58,30 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 20
 }).addTo(map);
 
-// Create main marker
-var marker = L.marker([initialLat, initialLng], { rotationAngle: 0 }).addTo(map);
+
+// ---------------------------------------------------
+//  CUSTOM AUTO ICON — UBACIVANJE TVOJE Auto_KV.png
+// ---------------------------------------------------
+
+var carIcon = L.icon({
+    iconUrl: "Auto_KV.png",   // tvoje PNG ime
+    iconSize: [64, 64],       // izgled markera
+    iconAnchor: [32, 48],     // donji centar = savršna rotacija za auto
+    popupAnchor: [0, -48]
+});
+
+// Create main marker WITH CUSTOM ICON + ROTATION SUPPORT
+var marker = L.marker([initialLat, initialLng], {
+    icon: carIcon,
+    rotationAngle: 0,
+    rotationOrigin: "center"  // rotatedMarker koristi iconAnchor za pivot
+}).addTo(map);
 
 
-// --- UPDATE FROM KODULAR EVERY SECOND ---
+// ---------------------------------------------------
+// UPDATE FUNCTION (CALLED FROM KODULAR)
+// ---------------------------------------------------
+
 function updatePosition(lat, lng, bearing) {
 
     // Move marker

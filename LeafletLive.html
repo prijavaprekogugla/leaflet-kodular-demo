@@ -9,10 +9,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
-<!-- Rotated marker plugin (rotacija ikone vozila) -->
-<script src="https://unpkg.com/leaflet-rotatedmarker/leaflet.rotatedMarker.js"></script>
-
-<!-- Leaflet rotate plugin (rotacija cele mape) -->
+<!-- Map rotation plugin -->
 <script src="https://cdn.jsdelivr.net/npm/leaflet-rotate@0.2.0/dist/leaflet-rotate.min.js"></script>
 
 <style>
@@ -31,6 +28,27 @@
       right: 0;
       bottom: 0;
   }
+
+  /* --------------------------------------------
+     GOOGLE MAPS STYLE PLAVA TAČKA + BELI PRSTEN 
+     + CRVENI HALO
+     -------------------------------------------- */
+  .gps-dot {
+      width: 14px;
+      height: 14px;
+
+      /* Plava inner tačka */
+      background: #1a73e8;
+      border-radius: 50%;
+
+      /* Beli prsten */
+      border: 3px solid white;
+
+      /* Crveni halo efekt */
+      box-shadow: 
+          0 0 14px rgba(255, 0, 0, 0.55),
+          0 0 24px rgba(255, 0, 0, 0.35);
+  }
 </style>
 
 </head>
@@ -40,64 +58,58 @@
 
 <script>
 
-// --- INITIAL SETUP (runs only once) ---
+// -----------------------------------------------------
+// INITIAL MAP SETUP
+// -----------------------------------------------------
 
-// Safe default center (Beograd)
-var initialLat = 44.8125;
+var initialLat = 44.8125;  // Beograd
 var initialLng = 20.4612;
 
-// Create map with rotation enabled
+// Kreiranje mape sa rotacijom
 var map = L.map('map', {
     zoomControl: false,
-    rotate: true,          // Enable rotation
-    rotateControl: false   // Hide rotation button
+    rotate: true,
+    rotateControl: false
 }).setView([initialLat, initialLng], 17);
 
-// Add tile layer
+// Tile layer (OSM)
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 20
 }).addTo(map);
 
 
-// ---------------------------------------------------
-//  CUSTOM AUTO ICON — UBACIVANJE TVOJE Auto_KV.png
-// ---------------------------------------------------
+// -----------------------------------------------------
+// GOOGLE STYLE GPS DOT (BLUE DOT + WHITE RING + RED HALO)
+// -----------------------------------------------------
 
-var carIcon = L.icon({
-    iconUrl: "Auto_KV.png",   // PNG ime
-    iconSize: [32, 32],
-    iconAnchor: [16, 28],  // donji centar, 
-    popupAnchor: [0, -28]
+var gpsMarkerIcon = L.divIcon({
+    className: 'gps-dot',
+    iconSize: [20, 20],     // ukupna veličina uključuje i beli prsten
+    iconAnchor: [10, 10]    // centar tačke
 });
 
-// Create main marker WITH CUSTOM ICON + ROTATION SUPPORT
+// kreiranje markera
 var marker = L.marker([initialLat, initialLng], {
-    icon: carIcon,
-    rotationAngle: 0,
-    rotationOrigin: "center"  // rotatedMarker koristi iconAnchor za pivot
+    icon: gpsMarkerIcon
 }).addTo(map);
 
 
-// ---------------------------------------------------
-// UPDATE FUNCTION (CALLED FROM KODULAR)
-// ---------------------------------------------------
+// -----------------------------------------------------
+// FUNCTION CALLED FROM KODULAR (updatePosition)
+// -----------------------------------------------------
 
 function updatePosition(lat, lng, bearing) {
 
-    // Move marker
+    // pomeri marker
     marker.setLatLng([lat, lng]);
 
-    // Rotate marker (vehicle icon)
-    marker.setRotationAngle(bearing);
-
-    // Center map
+    // pomeri mapu tako da marker ostaje u centru
     map.setView([lat, lng], map.getZoom(), { animate: false });
 
-    // Rotate map so heading points upward
+    // rotiraj mapu po azimutu
     map.setBearing(bearing);
 }
 
 </script>
-
 </body>
 </html>

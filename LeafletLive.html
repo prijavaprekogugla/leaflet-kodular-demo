@@ -30,7 +30,7 @@
       bottom: 0;
   }
 
-  /* Overlay dok čekamo GPS signal */
+  /* Overlay koji ostaje DOK NE STIGNE PRAVA GPS POZICIJA */
   #loadingOverlay {
       position: absolute;
       top: 0;
@@ -59,7 +59,7 @@
       width: 10px;
       height: 10px;
 
-      background: #1a73e8;   /* core blue */
+      background: #1a73e8;  
       border-radius: 50%;
       border: 2px solid white;
 
@@ -72,7 +72,7 @@
 </head>
 <body>
 
-<!-- Overlay dok čeka GPS signal -->
+<!-- Overlay ostaje dok NE dobijemo PRVU PRAVU GPS lokaciju -->
 <div id="loadingOverlay">Čekam GPS signal…</div>
 
 <div id="map"></div>
@@ -80,11 +80,11 @@
 <script>
 
 /* ----------------------------------------------------------
-   INITIAL MAP SETUP
+   INITIAL MAP SETUP — Novi Sad kao početni prikaz
 ----------------------------------------------------------- */
 
-var initialLat = 44.8125;
-var initialLng = 20.4612;
+var initialLat = 45.2671;   // Novi Sad
+var initialLng = 19.8335;   // Novi Sad
 
 var map = L.map('map', {
     zoomControl: false,
@@ -92,8 +92,9 @@ var map = L.map('map', {
     rotateControl: false
 }).setView([initialLat, initialLng], 17);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 20
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 20,
+    crossOrigin: true
 }).addTo(map);
 
 
@@ -103,8 +104,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 var gpsMarkerIcon = L.divIcon({
     className: 'gps-dot',
-    iconSize: [14, 14],   // plava 10px + prsten 2px
-    iconAnchor: [7, 7]    // centar
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
 });
 
 var marker = L.marker([initialLat, initialLng], {
@@ -124,29 +125,22 @@ var targetLng = initialLng;
 
 var isAnimating = false;
 
-// Interpolation strength (Google-like)
+// Interpolacija kao Google Maps
 var tStrength = 0.18;
 
 function animateMarker() {
-
-    // differences
     var dLat = targetLat - currentLat;
     var dLng = targetLng - currentLng;
 
-    // extremely close → stop
     if (Math.abs(dLat) < 0.000001 && Math.abs(dLng) < 0.000001) {
         isAnimating = false;
         return;
     }
 
-    // move toward target
     currentLat += dLat * tStrength;
     currentLng += dLng * tStrength;
 
-    // update marker
     marker.setLatLng([currentLat, currentLng]);
-
-    // center map
     map.setView([currentLat, currentLng], map.getZoom(), { animate: false });
 
     requestAnimationFrame(animateMarker);
@@ -154,26 +148,30 @@ function animateMarker() {
 
 
 /* ----------------------------------------------------------
-   UPDATE FUNCTION CALLED FROM KODULAR
+   GPS UPDATE FROM KODULAR
 ----------------------------------------------------------- */
+
+var gpsFixReceived = false;
 
 function updatePosition(lat, lng, bearing) {
 
-    // hide loading overlay on first GPS position
-    var overlay = document.getElementById("loadingOverlay");
-    if (overlay) overlay.style.display = "none";
+    // Ako još nismo dobili PRAVU GPS lokaciju → sakrij overlay TEK SADA
+    if (!gpsFixReceived && lat !== 0 && lng !== 0) {
+        gpsFixReceived = true;
+        var overlay = document.getElementById("loadingOverlay");
+        if (overlay) overlay.style.display = "none";
+    }
 
-    // set new target
+    // Set target for interpolation
     targetLat = lat;
     targetLng = lng;
 
-    // start animation loop if not active
     if (!isAnimating) {
         isAnimating = true;
         requestAnimationFrame(animateMarker);
     }
 
-    // smooth rotate map (CSS transition handles animation)
+    // Smooth CSS rotation
     map.setBearing(bearing);
 }
 

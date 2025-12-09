@@ -30,24 +30,30 @@
   }
 
   /* --------------------------------------------
-     GOOGLE MAPS STYLE PLAVA TAČKA + BELI PRSTEN 
-     + CRVENI HALO
+     SMOOTH MAP ROTATION (CSS TRANSITION)
+     -------------------------------------------- */
+  .leaflet-rotate-pane {
+      transition: transform 0.20s linear;
+  }
+
+  /* --------------------------------------------
+     MINI PLAVA TAČKA + BELI PRSTEN + CRVENI HALO
      -------------------------------------------- */
   .gps-dot {
-      width: 14px;
-      height: 14px;
+      width: 10px;
+      height: 10px;
 
-      /* Plava inner tačka */
+      /* Plava tačka */
       background: #1a73e8;
       border-radius: 50%;
 
-      /* Beli prsten */
-      border: 3px solid white;
+      /* Beli prsten oko tačke */
+      border: 2px solid white;
 
-      /* Crveni halo efekt */
-      box-shadow: 
-          0 0 14px rgba(255, 0, 0, 0.55),
-          0 0 24px rgba(255, 0, 0, 0.35);
+      /* Crveni glow halo */
+      box-shadow:
+          0 0 12px rgba(255, 0, 0, 0.55),
+          0 0 20px rgba(255, 0, 0, 0.35);
   }
 </style>
 
@@ -79,16 +85,15 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 
 // -----------------------------------------------------
-// GOOGLE STYLE GPS DOT (BLUE DOT + WHITE RING + RED HALO)
+// MINI GOOGLE STYLE DOT (10px + ring + halo)
 // -----------------------------------------------------
 
 var gpsMarkerIcon = L.divIcon({
     className: 'gps-dot',
-    iconSize: [20, 20],     // ukupna veličina uključuje i beli prsten
-    iconAnchor: [10, 10]    // centar tačke
+    iconSize: [14, 14],   // plava 10px + prsten 2px
+    iconAnchor: [7, 7]    // centar markera
 });
 
-// kreiranje markera
 var marker = L.marker([initialLat, initialLng], {
     icon: gpsMarkerIcon
 }).addTo(map);
@@ -103,10 +108,10 @@ function updatePosition(lat, lng, bearing) {
     // pomeri marker
     marker.setLatLng([lat, lng]);
 
-    // pomeri mapu tako da marker ostaje u centru
+    // centriraj mapu na marker
     map.setView([lat, lng], map.getZoom(), { animate: false });
 
-    // rotiraj mapu po azimutu
+    // rotiraj mapu prema azimutu (CSS transition će ovo izgladiti)
     map.setBearing(bearing);
 }
 

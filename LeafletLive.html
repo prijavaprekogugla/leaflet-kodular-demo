@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>Leaflet Live</title>
 
-<!-- Leaflet core -->
+<!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
@@ -50,13 +50,12 @@ html, body {
 
 <body>
 
-<!-- ⛔ NAMERNO PROMENJEN TEKST -->
-<div id="loadingOverlay">TEST 999</div>
+<div id="loadingOverlay">Čekam GPS signal…</div>
 <div id="map"></div>
 
 <script>
 /* --------------------------------------------------
-   SIGNAL "READY" ZA KODULAR
+   READY SIGNAL ZA KODULAR
 -------------------------------------------------- */
 window.onload = function () {
     if (window.AppInventor) {
@@ -70,11 +69,19 @@ window.onload = function () {
 var initialLat = 45.2671;
 var initialLng = 19.8335;
 
+var mapReady = false;
+var firstFixDone = false;
+
 var map = L.map('map').setView([initialLat, initialLng], 18);
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 20
 }).addTo(map);
+
+/* Leaflet signal da su tile-ovi spremni */
+map.whenReady(function () {
+    mapReady = true;
+});
 
 var marker = L.marker([initialLat, initialLng], {
     icon: L.divIcon({
@@ -85,21 +92,19 @@ var marker = L.marker([initialLat, initialLng], {
 }).addTo(map);
 
 /* --------------------------------------------------
-   STANJE
--------------------------------------------------- */
-var firstFixDone = false;
-var mapStabilized = false;
-
-/* --------------------------------------------------
-   updatePosition — STABILNA VERZIJA
+   updatePosition — ČISTA I STABILNA VERZIJA
 -------------------------------------------------- */
 function updatePosition(lat, lng, bearing) {
+
+    /* Ne diraj mapu dok Leaflet nije spreman */
+    if (!mapReady) return;
 
     lat = Number(lat);
     lng = Number(lng);
 
     if (isNaN(lat) || isNaN(lng)) return;
 
+    /* Prvi validan GPS fix → skloni overlay */
     if (!firstFixDone) {
         firstFixDone = true;
         var overlay = document.getElementById("loadingOverlay");
@@ -108,13 +113,6 @@ function updatePosition(lat, lng, bearing) {
 
     marker.setLatLng([lat, lng]);
     map.setView([lat, lng], map.getZoom(), { animate: false });
-
-    if (!mapStabilized) {
-        mapStabilized = true;
-        setTimeout(function () {
-            map.invalidateSize(true);
-        }, 300);
-    }
 }
 </script>
 

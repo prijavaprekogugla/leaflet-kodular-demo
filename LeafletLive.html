@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>Leaflet Live</title>
 
-<!-- Leaflet -->
+<!-- Leaflet core -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
@@ -55,7 +55,7 @@ html, body {
 
 <script>
 /* --------------------------------------------------
-   READY SIGNAL ZA KODULAR
+   SIGNAL "READY" ZA KODULAR
 -------------------------------------------------- */
 window.onload = function () {
     if (window.AppInventor) {
@@ -64,7 +64,7 @@ window.onload = function () {
 };
 
 /* --------------------------------------------------
-   MAPA – početni pogled
+   INICIJALNA MAPA
 -------------------------------------------------- */
 var initialLat = 45.2671;
 var initialLng = 19.8335;
@@ -84,5 +84,28 @@ var marker = L.marker([initialLat, initialLng], {
 }).addTo(map);
 
 /* --------------------------------------------------
-   STABILNA updatePosition FUNKCIJA
----------------------------------------------
+   STANJE
+-------------------------------------------------- */
+var firstFixDone = false;
+var mapStabilized = false;
+
+/* --------------------------------------------------
+   updatePosition — STABILNA VERZIJA
+-------------------------------------------------- */
+function updatePosition(lat, lng, bearing) {
+
+    lat = Number(lat);
+    lng = Number(lng);
+
+    if (isNaN(lat) || isNaN(lng)) return;
+
+    /* 🔹 prvi validan GPS fix */
+    if (!firstFixDone) {
+        firstFixDone = true;
+
+        var overlay = document.getElementById("loadingOverlay");
+        if (overlay) overlay.style.display = "none";
+    }
+
+    /* 🔹 pomeri marker i mapu */
+    marker.setLatLng([lat, lng]);

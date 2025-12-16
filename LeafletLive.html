@@ -1,189 +1,105 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=devicewidth, initialscale=1.0">
-<meta http-equiv="Content-SecurityPolicy" content="upgradeinsecure-requests">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>Leaflet Live</title>
 
-<!-- Leaflet core -->
+<!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
-<!-- Map rotation plugin -->
-<script src="https://cdn.jsdelivr.net/npm/leaflet-rotate@0.2.0/dist/leaflet-rotate.min.js"></script>
-
 <style>
-  html, body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-  }
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
 
-  #map {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-  }
+#map {
+    width: 100%;
+    height: 100%;
+}
 
-  #loadingOverlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+#loadingOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(240,240,255,0.95);
+    font-size: 22px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    font-family: sans-serif;
+}
 
-      background: rgba(240, 240, 255, 0.95);
-      color: #333;
-      font-size: 22px;
-      font-weight: bold;
-      text-align: center;
-
-      padding-top: 40%;
-      z-index: 9999;
-      font-family: sans-serif;
-  }
-
-  .leaflet-rotate-pane {
-      transition: transform 0.20s linear;
-  }
-
-  .gps-dot {
-      width: 10px;
-      height: 10px;
-
-      background: #1a73e8;
-      border-radius: 50%;
-      border: 2px solid white;
-
-      box-shadow:
-          0 0 12px rgba(255, 0, 0, 0.55),
-          0 0 20px rgba(255, 0, 0, 0.35);
-  }
+.gps-dot {
+    width: 12px;
+    height: 12px;
+    background: #1a73e8;
+    border-radius: 50%;
+    border: 2px solid white;
+}
 </style>
-
 </head>
+
 <body>
 
 <div id="loadingOverlay">Čekam GPS signal…</div>
-
 <div id="map"></div>
 
 <script>
-
-/* ----------------------------------------------------------
-   SEND READY SIGNAL TO KODULAR
------------------------------------------------------------ */
-window.onload = function() {
+/* --------------------------------------------------
+   READY SIGNAL ZA KODULAR
+-------------------------------------------------- */
+window.onload = function () {
     if (window.AppInventor) {
         window.AppInventor.setWebViewString("READY");
     }
 };
 
-
-/* ----------------------------------------------------------
-   MAP SETUP
------------------------------------------------------------ */
-
-var initialLat = 45.2671;
-var initialLng = 19.8335;
-
-var map = L.map('map', {
-    zoomControl: false,
-    rotate: true,
-    rotateControl: false
-}).setView([initialLat, initialLng], 19);
+/* --------------------------------------------------
+   MAPA
+-------------------------------------------------- */
+var map = L.map('map').setView([45.2671, 19.8335], 18);
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 20,
-    crossOrigin: true
+    maxZoom: 20
 }).addTo(map);
 
-
-/* ----------------------------------------------------------
-   GPS MARKER
------------------------------------------------------------ */
-
-var gpsMarkerIcon = L.divIcon({
-    className: 'gps-dot',
-    iconSize: [14, 14],
-    iconAnchor: [7, 7]
-});
-
-var marker = L.marker([initialLat, initialLng], {
-    icon: gpsMarkerIcon
+var marker = L.marker([45.2671, 19.8335], {
+    icon: L.divIcon({
+        className: 'gps-dot',
+        iconSize: [12, 12],
+        iconAnchor: [6, 6]
+    })
 }).addTo(map);
 
+/* --------------------------------------------------
+   MINIMALNA updatePosition FUNKCIJA
+-------------------------------------------------- */
+function updatePosition(lat, lng, bearing) {
 
-/* ----------------------------------------------------------
-   SMOOTH INTERPOLATION
------------------------------------------------------------ */
-
-var currentLat = initialLat;
-var currentLng = initialLng;
-
-var targetLat = initialLat;
-var targetLng = initialLng;
-
-var isAnimating = false;
-var tStrength = 0.18;
-
-function animateMarker() {
-    var dLat = targetLat - currentLat;
-    var dLng = targetLng - currentLng;
-
-    if (Math.abs(dLat) < 0.000001 && Math.abs(dLng) < 0.000001) {
-        isAnimating = false;
-        return;
+    // 🔥 HARD FORCE – SKLONI OVERLAY ODMAH
+    var overlay = document.getElementById("loadingOverlay");
+    if (overlay) {
+        overlay.style.display = "none";
     }
-
-    currentLat += dLat * tStrength;
-    currentLng += dLng * tStrength;
-
-    marker.setLatLng([currentLat, currentLng]);
-    map.setView([currentLat, currentLng], map.getZoom(), { animate: false });
-
-    requestAnimationFrame(animateMarker);
-}
-
-
-/* ----------------------------------------------------------
-   UPDATED updatePosition() — FINAL VERSION
------------------------------------------------------------ */
-
-var gpsFixReceived = false;
-var overlay = document.getElementById("loadingOverlay");
-
-function updatePosition(lat, lng, bearing = 0) {
 
     lat = Number(lat);
     lng = Number(lng);
 
-    // Hide overlay on first valid GPS fix
-    if (!gpsFixReceived && lat !== 0 && lng !== 0 && !isNaN(lat) && !isNaN(lng)) {
-        gpsFixReceived = true;
-        if (overlay) overlay.style.display = "none";
-    }
-
     if (isNaN(lat) || isNaN(lng)) return;
 
-    // Interpolation target
-    targetLat = lat;
-    targetLng = lng;
-
-    if (!isAnimating) {
-        isAnimating = true;
-        requestAnimationFrame(animateMarker);
-    }
-
-    // Map rotation
-   // map.setBearing(bearing); 
+    marker.setLatLng([lat, lng]);
+    map.setView([lat, lng], map.getZoom(), { animate: false });
 }
-
 </script>
+
 </body>
 </html>

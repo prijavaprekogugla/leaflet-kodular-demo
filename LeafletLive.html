@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+<meta name="viewport" content="width=devicewidth, initialscale=1.0">
+<meta http-equiv="Content-SecurityPolicy" content="upgradeinsecure-requests">
 <title>Leaflet Live</title>
 
 <!-- Leaflet core -->
@@ -30,7 +30,6 @@
       bottom: 0;
   }
 
-  /* Overlay koji ostaje DOK NE STIGNE PRAVA GPS POZICIJA */
   #loadingOverlay {
       position: absolute;
       top: 0;
@@ -49,17 +48,15 @@
       font-family: sans-serif;
   }
 
-  /* Smooth rotation of the entire map */
   .leaflet-rotate-pane {
       transition: transform 0.20s linear;
   }
 
-  /* Mini plava tačka + beli prsten + crveni halo */
   .gps-dot {
       width: 10px;
       height: 10px;
 
-      background: #1a73e8;  
+      background: #1a73e8;
       border-radius: 50%;
       border: 2px solid white;
 
@@ -72,7 +69,6 @@
 </head>
 <body>
 
-<!-- Overlay ostaje dok NE dobijemo PRVU PRAVU GPS lokaciju -->
 <div id="loadingOverlay">Čekam GPS signal…</div>
 
 <div id="map"></div>
@@ -80,11 +76,21 @@
 <script>
 
 /* ----------------------------------------------------------
-   INITIAL MAP SETUP — Novi Sad kao početni prikaz
+   SEND READY SIGNAL TO KODULAR
+----------------------------------------------------------- */
+window.onload = function() {
+    if (window.AppInventor) {
+        window.AppInventor.setWebViewString("READY");
+    }
+};
+
+
+/* ----------------------------------------------------------
+   MAP SETUP
 ----------------------------------------------------------- */
 
-var initialLat = 45.2671;   // Novi Sad
-var initialLng = 19.8335;   // Novi Sad
+var initialLat = 45.2671;
+var initialLng = 19.8335;
 
 var map = L.map('map', {
     zoomControl: false,
@@ -98,4 +104,86 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 
-/* --*
+/* ----------------------------------------------------------
+   GPS MARKER
+----------------------------------------------------------- */
+
+var gpsMarkerIcon = L.divIcon({
+    className: 'gps-dot',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+});
+
+var marker = L.marker([initialLat, initialLng], {
+    icon: gpsMarkerIcon
+}).addTo(map);
+
+
+/* ----------------------------------------------------------
+   SMOOTH INTERPOLATION
+----------------------------------------------------------- */
+
+var currentLat = initialLat;
+var currentLng = initialLng;
+
+var targetLat = initialLat;
+var targetLng = initialLng;
+
+var isAnimating = false;
+var tStrength = 0.18;
+
+function animateMarker() {
+    var dLat = targetLat - currentLat;
+    var dLng = targetLng - currentLng;
+
+    if (Math.abs(dLat) < 0.000001 && Math.abs(dLng) < 0.000001) {
+        isAnimating = false;
+        return;
+    }
+
+    currentLat += dLat * tStrength;
+    currentLng += dLng * tStrength;
+
+    marker.setLatLng([currentLat, currentLng]);
+    map.setView([currentLat, currentLng], map.getZoom(), { animate: false });
+
+    requestAnimationFrame(animateMarker);
+}
+
+
+/* ----------------------------------------------------------
+   UPDATED updatePosition() — FINAL VERSION
+----------------------------------------------------------- */
+
+var gpsFixReceived = false;
+var overlay = document.getElementById("loadingOverlay");
+
+function updatePosition(lat, lng, bearing = 0) {
+
+    lat = Number(lat);
+    lng = Number(lng);
+
+    // Hide overlay on first valid GPS fix
+    if (!gpsFixReceived && lat !== 0 && lng !== 0 && !isNaN(lat) && !isNaN(lng)) {
+        gpsFixReceived = true;
+        if (overlay) overlay.style.display = "none";
+    }
+
+    if (isNaN(lat) || isNaN(lng)) return;
+
+    // Interpolation target
+    targetLat = lat;
+    targetLng = lng;
+
+    if (!isAnimating) {
+        isAnimating = true;
+        requestAnimationFrame(animateMarker);
+    }
+
+    // Map rotation
+    map.setBearing(bearing);
+}
+
+</script>
+</body>
+</html>

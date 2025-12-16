@@ -50,7 +50,8 @@ html, body {
 
 <body>
 
-<div id="loadingOverlay">Čekam GPS signal…</div>
+<!-- ⛔ NAMERNO PROMENJEN TEKST -->
+<div id="loadingOverlay">TEST 999</div>
 <div id="map"></div>
 
 <script>
@@ -99,13 +100,23 @@ function updatePosition(lat, lng, bearing) {
 
     if (isNaN(lat) || isNaN(lng)) return;
 
-    /* 🔹 prvi validan GPS fix */
     if (!firstFixDone) {
         firstFixDone = true;
-
         var overlay = document.getElementById("loadingOverlay");
         if (overlay) overlay.style.display = "none";
     }
 
-    /* 🔹 pomeri marker i mapu */
     marker.setLatLng([lat, lng]);
+    map.setView([lat, lng], map.getZoom(), { animate: false });
+
+    if (!mapStabilized) {
+        mapStabilized = true;
+        setTimeout(function () {
+            map.invalidateSize(true);
+        }, 300);
+    }
+}
+</script>
+
+</body>
+</html>

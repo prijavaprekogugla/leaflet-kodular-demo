@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <title>Leaflet Live</title>
 
-<!-- Leaflet -->
+<!-- Leaflet core -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
@@ -55,7 +55,7 @@ html, body {
 
 <script>
 /* --------------------------------------------------
-   READY SIGNAL ZA KODULAR
+   SIGNAL "READY" ZA KODULAR
 -------------------------------------------------- */
 window.onload = function () {
     if (window.AppInventor) {
@@ -69,7 +69,7 @@ window.onload = function () {
 var initialLat = 45.2671;
 var initialLng = 19.8335;
 
-var mapReady = false;
+var mapTilesLoaded = false;
 var firstFixDone = false;
 
 var map = L.map('map').setView([initialLat, initialLng], 18);
@@ -78,9 +78,9 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 20
 }).addTo(map);
 
-/* Leaflet signal da su tile-ovi spremni */
-map.whenReady(function () {
-    mapReady = true;
+/* 🔑 PRAVI SIGNAL: tile-ovi su stvarno učitani */
+map.on('load', function () {
+    mapTilesLoaded = true;
 });
 
 var marker = L.marker([initialLat, initialLng], {
@@ -92,12 +92,12 @@ var marker = L.marker([initialLat, initialLng], {
 }).addTo(map);
 
 /* --------------------------------------------------
-   updatePosition — ČISTA I STABILNA VERZIJA
+   updatePosition — STABILNA FINALNA VERZIJA
 -------------------------------------------------- */
 function updatePosition(lat, lng, bearing) {
 
-    /* Ne diraj mapu dok Leaflet nije spreman */
-    if (!mapReady) return;
+    /* Ne diraj mapu dok tile-ovi nisu učitani */
+    if (!mapTilesLoaded) return;
 
     lat = Number(lat);
     lng = Number(lng);

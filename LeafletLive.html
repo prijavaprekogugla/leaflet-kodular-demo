@@ -64,15 +64,18 @@ window.onload = function () {
 };
 
 /* --------------------------------------------------
-   MAPA
+   MAPA – početni pogled
 -------------------------------------------------- */
-var map = L.map('map').setView([45.2671, 19.8335], 18);
+var initialLat = 45.2671;
+var initialLng = 19.8335;
+
+var map = L.map('map').setView([initialLat, initialLng], 18);
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 20
 }).addTo(map);
 
-var marker = L.marker([45.2671, 19.8335], {
+var marker = L.marker([initialLat, initialLng], {
     icon: L.divIcon({
         className: 'gps-dot',
         iconSize: [12, 12],
@@ -81,25 +84,5 @@ var marker = L.marker([45.2671, 19.8335], {
 }).addTo(map);
 
 /* --------------------------------------------------
-   MINIMALNA updatePosition FUNKCIJA
--------------------------------------------------- */
-function updatePosition(lat, lng, bearing) {
-
-    // 🔥 HARD FORCE – SKLONI OVERLAY ODMAH
-    var overlay = document.getElementById("loadingOverlay");
-    if (overlay) {
-        overlay.style.display = "none";
-    }
-
-    lat = Number(lat);
-    lng = Number(lng);
-
-    if (isNaN(lat) || isNaN(lng)) return;
-
-    marker.setLatLng([lat, lng]);
-    map.setView([lat, lng], map.getZoom(), { animate: false });
-}
-</script>
-
-</body>
-</html>
+   STABILNA updatePosition FUNKCIJA
+---------------------------------------------

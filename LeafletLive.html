@@ -1,120 +1,247 @@
+Skip to content
+You said:
+Pokušaj 68
+ChatGPT said:
+Vidim poruku “Pokušaj 68” 🙂
+Kako mogu pomoći dalje? Ako testiraš nešto, slobodno napiši što želiš da napravimo u ovom pokušaju.
+
+You said:
+da li radiš?
+ChatGPT said:
+Da 🙂 radim.
+Slobodno mi reci što ti treba ili što želiš isprobati.
+
+You said:
+Želim da napravim aplikaciju za mobilni telefon uz pomoc programa Kodular. Glavna logika: Program prati kretanje mobilnog telefona, u daljem tekstu auta, po mapi sa aziriranjem pozicije svake sekunde. Kada brzina pređe 10 km/h , briše se prethodno zabeležena pozicija parkinga. a kada brzina padne na 0 km/h, zabeleži se pozicija na mapi kao : "Parking pozicija". Dakle, ako krenem da vozim kroz grad, i stanem na semaforu, zabeležiće se parking pozicija koja će se obrisati čim krenem da vozim dalje i postignem brzinu veću od 10 km/h.  I tako u nedogled. Po toj logici, ako se parkiram i izađem iz auta, peške neću postići 10 km/h , tako da će zadnja lokacija koja je zabeležena pri brzini od 0 km/h, bila ujedno i parking lokacija. Program treba da zapamti tu parking lokaciju čak i ako se program isključi, pa se ponovo uključi sutra. 
+Za sada imam u Screen1 Web_Viewer1, BUtton, Location_Sensor1, Clock1, Notifier1 i TinyDB1 . Web_Viewer je home url: https://prijavaprekogugla.github.io/leaflet-kodular-demo/LeafletLive.html. Trebao bi nov kod za leafletLive i da sa mnom postupno, korak po korak napraviš blokove
+ChatGPT said:
+
+Thought for 14s
+Naravno — idemo korak po korak. Napravićemo 2 stvari:
+
+novi LeafletLive.html (sa funkcijama koje Kodular može da poziva)
+
+blokove u Kodularu: praćenje lokacije svake sekunde + logika brzine + čuvanje parkinga u TinyDB
+
+1) Novi kod za LeafletLive.html (zameni postojeći)
+Ovo je kompletan HTML (možeš ga staviti kao LeafletLive.html na GitHub Pages). Ima:
+
+marker “AUTO” (trenutna pozicija)
+
+marker “Parking pozicija”
+
+funkcije koje poziva Kodular:
+updateCar(lat,lng)
+setParking(lat,lng)
+clearParking()
+
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-<title>Leaflet Live</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaflet Live - Kodular</title>
 
-<!-- Leaflet core -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<style>
-html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
-
-#map {
-    width: 100%;
-    height: 100%;
-}
-
-#loadingOverlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(240,240,255,0.95);
-    font-size: 22px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    font-family: sans-serif;
-}
-
-.gps-dot {
-    width: 12px;
-    height: 12px;
-    background: #1a73e8;
-    border-radius: 50%;
-    border: 2px solid white;
-}
-</style>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #map { height: 100%; width: 100%; }
+    .badge {
+      position: absolute; z-index: 9999;
+      left: 10px; top: 10px;
+      background: rgba(0,0,0,0.6);
+      color: white; padding: 8px 10px;
+      border-radius: 8px; font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+  </style>
 </head>
-
 <body>
+  <div class="badge" id="info">Spremno.</div>
+  <div id="map"></div>
 
-<div id="loadingOverlay">Čekam GPS signal…</div>
-<div id="map"></div>
+  <script>
+    // Inicijalna mapa (biće pomerena čim stigne prva pozicija)
+    const map = L.map('map').setView([44.7866, 20.4489], 14); // BG default
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
 
-<script>
-/* --------------------------------------------------
-   SIGNAL "READY" ZA KODULAR
--------------------------------------------------- */
-window.onload = function () {
-    if (window.AppInventor) {
-        window.AppInventor.setWebViewString("READY");
-    }
-};
+    let carMarker = null;
+    let parkingMarker = null;
 
-/* --------------------------------------------------
-   INICIJALNA MAPA
--------------------------------------------------- */
-var initialLat = 45.2671;
-var initialLng = 19.8335;
+    function setInfo(txt){ document.getElementById('info').innerText = txt; }
 
-var mapTilesLoaded = false;
-var firstFixDone = false;
-
-var map = L.map('map').setView([initialLat, initialLng], 18);
-
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 20
-}).addTo(map);
-
-/* 🔑 PRAVI SIGNAL: tile-ovi su stvarno učitani */
-map.on('load', function () {
-    mapTilesLoaded = true;
-});
-
-var marker = L.marker([initialLat, initialLng], {
-    icon: L.divIcon({
-        className: 'gps-dot',
-        iconSize: [12, 12],
-        iconAnchor: [6, 6]
-    })
-}).addTo(map);
-
-/* --------------------------------------------------
-   updatePosition — STABILNA FINALNA VERZIJA
--------------------------------------------------- */
-function updatePosition(lat, lng, bearing) {
-
-    /* Ne diraj mapu dok tile-ovi nisu učitani */
-    if (!mapTilesLoaded) return;
-
-    lat = Number(lat);
-    lng = Number(lng);
-
-    if (isNaN(lat) || isNaN(lng)) return;
-
-    /* Prvi validan GPS fix → skloni overlay */
-    if (!firstFixDone) {
-        firstFixDone = true;
-        var overlay = document.getElementById("loadingOverlay");
-        if (overlay) overlay.style.display = "none";
+    // Poziva Kodular svake sekunde
+    window.updateCar = function(lat, lng) {
+      const p = [lat, lng];
+      if (!carMarker) {
+        carMarker = L.marker(p).addTo(map).bindPopup("AUTO");
+        map.setView(p, 17);
+      } else {
+        carMarker.setLatLng(p);
+      }
+      // nežno prati auto (ne pravi preveliki "skok" zoom-a)
+      map.panTo(p, { animate: true, duration: 0.5 });
     }
 
-    marker.setLatLng([lat, lng]);
-    map.setView([lat, lng], map.getZoom(), { animate: false });
-}
-</script>
+    // Poziva Kodular kad treba da zabeleži parking
+    window.setParking = function(lat, lng) {
+      const p = [lat, lng];
+      if (!parkingMarker) {
+        parkingMarker = L.marker(p).addTo(map).bindPopup("Parking pozicija");
+      } else {
+        parkingMarker.setLatLng(p);
+      }
+      setInfo("Parking snimljen.");
+    }
 
+    // Poziva Kodular kad brzina pređe 10 km/h
+    window.clearParking = function() {
+      if (parkingMarker) {
+        map.removeLayer(parkingMarker);
+        parkingMarker = null;
+      }
+      setInfo("Parking obrisan (vožnja).");
+    }
+
+    // Ako želiš da na startu pokaže parking iz TinyDB
+    window.restoreParking = function(lat, lng) {
+      window.setParking(lat, lng);
+      setInfo("Parking vraćen iz memorije.");
+    }
+  </script>
 </body>
 </html>
+2) Kodular – logika i blokovi (korak po korak)
+A) Globalne promenljive
+Napravi globalne varijable:
+
+global ParkLat = 0
+
+global ParkLng = 0
+
+global HasParking = false
+
+global LastSpeedKmh = 0
+
+B) Podešavanja komponenti
+Location_Sensor1
+
+Provider: GPS (ako ima opcija)
+
+TimeInterval / DistanceInterval: može 0 ili minimalno (ali mi svakako “čitamo” svake sekunde)
+
+Clock1
+
+TimerInterval = 1000
+
+TimerEnabled = true
+
+C) Screen1.Initialize (učitavanje parkinga iz TinyDB + priprema mape)
+Blokovi:
+
+set Location_Sensor1.Enabled to true
+
+Učitaj parking iz TinyDB:
+
+set global ParkLat to TinyDB1.GetValue("parkLat", 0)
+
+set global ParkLng to TinyDB1.GetValue("parkLng", 0)
+
+Ako je global ParkLat ≠ 0 i global ParkLng ≠ 0:
+
+set global HasParking to true
+
+(parking ćemo poslati web stranici kad se učita)
+
+WebViewer:
+
+call Web_Viewer1.GoHome (ili samo ostavi HomeUrl)
+
+Najbolje: koristi event Web_Viewer1.PageLoaded (ako ga ima Kodular) da posle učitavanja strane vrati parking marker.
+
+Ako imaš PageLoaded event:
+
+If global HasParking = true:
+
+call Web_Viewer1.EvaluateJavaScript
+
+javascript:
+restoreParking(ParkLat, ParkLng);
+
+(U Kodularu se obično u EvaluateJavaScript unosi samo kod bez “javascript:”, npr. restoreParking(44.1,20.2);)
+
+D) Clock1.Timer (glavna logika svake sekunde)
+Svake sekunde radiš:
+
+Uzmi brzinu:
+
+speedMS = Location_Sensor1.Speed
+
+speedKmh = speedMS * 3.6
+
+set global LastSpeedKmh to speedKmh
+
+Uzmi lokaciju:
+
+lat = Location_Sensor1.Latitude
+
+lng = Location_Sensor1.Longitude
+
+Pošalji auto marker na mapu:
+
+WebViewer.EvaluateJavaScript( "updateCar(" + lat + "," + lng + ");" )
+
+Logika parkinga:
+
+Pravilo 1: ako brzina > 10 km/h → briši parking
+
+IF speedKmh > 10 AND global HasParking = true:
+
+set global HasParking to false
+
+set global ParkLat to 0
+
+set global ParkLng to 0
+
+call TinyDB1.ClearTag("parkLat")
+
+call TinyDB1.ClearTag("parkLng")
+
+WebViewer.EvaluateJavaScript("clearParking();")
+
+Pravilo 2: ako brzina padne na 0 → snimi parking (ako već nije snimljen)
+U praksi GPS brzina retko bude tačno 0.000, zato stavi prag, npr. < 0.5 km/h.
+
+IF speedKmh < 0.5 AND global HasParking = false:
+
+set global HasParking to true
+
+set global ParkLat to lat
+
+set global ParkLng to lng
+
+TinyDB1.StoreValue("parkLat", lat)
+
+TinyDB1.StoreValue("parkLng", lng)
+
+WebViewer.EvaluateJavaScript("setParking(" + lat + "," + lng + ");")
+
+To je to — ova logika radi baš kako si opisao: semafor snimi parking, čim kreneš i pređeš 10 km/h obriše, a kad stvarno parkiraš i odeš peške, neće obrisati jer peške ne prelaziš 10 km/h.
+
+3) Bitne napomene (da ne “luduje” GPS)
+Ako hoćeš da bude “stabilnije” i da ne snimi parking dok još usporavaš: umesto odmah na <0.5, možeš tražiti da bude 0 barem 3 uzastopne sekunde (mala logika sa brojačem).
+
+Ako planiraš da aplikacija radi u pozadini dok je ekran ugašen: Kodular bez dodataka/ekstenzija često ima ograničenja (Android ubija background). Ali ti si tražio samo da pamti parking kad se app ugasi — to TinyDB već rešava.
+
+Ako želiš, u sledećem koraku ti napišem tačno kako izgledaju blokovi (tekstualno: koji event, koji if, koji set), i dodaćemo opciju “3 sekunde mirovanja” da ne snima parking na svako “cimanje” brzine.
+
+Prvo ću ti prekopirati moj kod da koji nije funkcionisao
+
+
+No file chosenNo file chosen
+ChatGPT can make mistakes. Check important info. See .

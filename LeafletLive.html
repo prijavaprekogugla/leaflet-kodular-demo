@@ -22,12 +22,14 @@
   </style>
 </head>
 <body>
+
   <div class="badge" id="info">Spremno.</div>
   <div id="map"></div>
 
   <script>
-    // Inicijalna mapa (biće pomerena čim stigne prva pozicija)
-    const map = L.map('map').setView([44.7866, 20.4489], 14); // BG default
+    // Inicijalna mapa (Beograd kao default)
+    const map = L.map('map').setView([44.7866, 20.4489], 14);
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap'
@@ -36,47 +38,28 @@
     let carMarker = null;
     let parkingMarker = null;
 
-    function setInfo(txt){ document.getElementById('info').innerText = txt; }
+    function setInfo(txt) {
+      document.getElementById('info').innerText = txt;
+    }
 
-    // Poziva Kodular svake sekunde
+    // --- PRAĆENJE AUTOMOBILA (Screen1) ---
     window.updateCar = function(lat, lng) {
       const p = [lat, lng];
+
       if (!carMarker) {
         carMarker = L.marker(p).addTo(map).bindPopup("AUTO");
         map.setView(p, 17);
       } else {
         carMarker.setLatLng(p);
       }
-      // nežno prati auto (ne pravi preveliki "skok" zoom-a)
-      map.panTo(p, { animate: true, duration: 0.5 });
-    }
 
-    // Poziva Kodular kad treba da zabeleži parking
+      map.panTo(p, { animate: true, duration: 0.5 });
+    };
+
+    // --- SNIMANJE PARKINGA (više se NE koristi na Screen1) ---
     window.setParking = function(lat, lng) {
       const p = [lat, lng];
+
       if (!parkingMarker) {
         parkingMarker = L.marker(p).addTo(map).bindPopup("Parking pozicija");
       } else {
-        parkingMarker.setLatLng(p);
-      }
-      setInfo("Parking snimljen.");
-    }
-
-    // Poziva Kodular kad brzina pređe 10 km/h
-    window.clearParking = function() {
-      if (parkingMarker) {
-        map.removeLayer(parkingMarker);
-        parkingMarker = null;
-      }
-      setInfo("Parking obrisan (vožnja).");
-    }
-
-    // Ako želiš da na startu pokaže parking iz TinyDB
-    window.restoreParking = function(lat, lng) {
-      window.setParking(lat, lng);
-      setInfo("Parking vraćen iz memorije.");
-    }
-  </script>
-</body>
-</html>
-

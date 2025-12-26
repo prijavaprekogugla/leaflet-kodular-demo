@@ -24,7 +24,7 @@
       width: 100%;
     }
 
-    /* ===== CENTRIRAJ DUGME ===== */
+    /* ==== CENTRIRAJ DUGME ==== */
     .center-control {
       position: absolute;
       bottom: 20px;
@@ -42,12 +42,11 @@
       border-radius: 10px;
       font-size: 13px;
       margin-bottom: 6px;
-      font-family: Arial, sans-serif;
     }
 
     .center-btn {
-      width: 48px;
-      height: 48px;
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
       background: white;
       border: 2px solid #1e90ff;
@@ -113,12 +112,8 @@
   function showParking(lat, lng) {
     const pos = [lat, lng];
 
-    if (parkingMarker) {
-      map.removeLayer(parkingMarker);
-    }
-    if (accuracyCircle) {
-      map.removeLayer(accuracyCircle);
-    }
+    if (parkingMarker) map.removeLayer(parkingMarker);
+    if (accuracyCircle) map.removeLayer(accuracyCircle);
 
     parkingMarker = L.circleMarker(pos, {
       radius: 8,
@@ -155,4 +150,3 @@
 
 </body>
 </html>
-

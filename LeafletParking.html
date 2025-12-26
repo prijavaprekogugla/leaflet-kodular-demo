@@ -10,7 +10,6 @@
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   />
-
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
@@ -24,7 +23,7 @@
       width: 100%;
     }
 
-    /* ==== CENTRIRAJ DUGME ==== */
+    /* ===== CENTRIRAJ DUGME ===== */
     .center-control {
       position: absolute;
       bottom: 20px;
@@ -36,12 +35,13 @@
     }
 
     .center-label {
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0,0,0,0.75);
       color: white;
       padding: 4px 10px;
       border-radius: 10px;
       font-size: 13px;
       margin-bottom: 6px;
+      font-family: Arial, sans-serif;
     }
 
     .center-btn {
@@ -77,10 +77,6 @@
       width: 2px;
       background: #1e90ff;
       transform: translateX(-50%);
-    }
-
-    .center-btn:active {
-      transform: scale(0.9);
     }
   </style>
 </head>
@@ -125,8 +121,7 @@
     parkingMarker.bindTooltip("Ovde ste parkirali", {
       permanent: true,
       direction: "top",
-      offset: [0, -12],
-      className: "parking-label"
+      offset: [0, -12]
     });
 
     accuracyCircle = L.circle(pos, {

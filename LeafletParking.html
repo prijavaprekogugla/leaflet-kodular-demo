@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Parking Location</title>
+  <title>Parking lokacija</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -24,41 +24,15 @@
       height: 100%;
     }
 
-    /* Pulsirajući krug */
-    .pulse {
-      width: 20px;
-      height: 20px;
-      background: rgba(0, 140, 255, 0.8);
-      border-radius: 50%;
-      position: relative;
-      box-shadow: 0 0 0 rgba(0, 140, 255, 0.4);
-      animation: pulse 2s infinite;
-    }
-
-    .pulse::after {
-      content: "";
-      width: 40px;
-      height: 40px;
-      position: absolute;
-      top: -10px;
-      left: -10px;
-      border-radius: 50%;
-      background: rgba(0, 140, 255, 0.3);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0% {
-        transform: scale(0.8);
-        opacity: 1;
-      }
-      70% {
-        transform: scale(2);
-        opacity: 0;
-      }
-      100% {
-        opacity: 0;
-      }
+    /* Tekst iznad markera */
+    .parking-label {
+      background: rgba(0, 0, 0, 0.75);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      white-space: nowrap;
     }
   </style>
 </head>
@@ -69,21 +43,22 @@
 
 <script>
   let map;
-  let parkingMarker;
-  let accuracyCircle;
+  let parkingMarker = null;
+  let accuracyCircle = null;
 
   function initMap() {
     map = L.map('map').setView([44.7866, 20.4489], 18);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '© OpenStreetMap'
+      attribution: '&copy; OpenStreetMap'
     }).addTo(map);
   }
 
   function showParking(lat, lng) {
     const pos = [lat, lng];
 
+    // ukloni staro ako postoji
     if (parkingMarker) {
       map.removeLayer(parkingMarker);
     }
@@ -91,22 +66,28 @@
       map.removeLayer(accuracyCircle);
     }
 
-    // Pulsirajući marker
-    const pulseIcon = L.divIcon({
-      className: '',
-      html: '<div class="pulse"></div>',
-      iconSize: [20, 20],
-      iconAnchor: [10, 10]
+    // CRVENA TAČKA (marker)
+    parkingMarker = L.circleMarker(pos, {
+      radius: 7,
+      color: '#ff0000',
+      fillColor: '#ff0000',
+      fillOpacity: 1
+    }).addTo(map);
+
+    // TEKST IZNAD MARKERA
+    parkingMarker.bindTooltip("Ovde ste parkirali", {
+      permanent: true,
+      direction: "top",
+      offset: [0, -12],
+      className: "parking-label"
     });
 
-    parkingMarker = L.marker(pos, { icon: pulseIcon }).addTo(map);
-
-    // Precizni krug
+    // PLAVI KRUG (preciznost)
     accuracyCircle = L.circle(pos, {
       radius: 15,
       color: '#1e90ff',
       fillColor: '#1e90ff',
-      fillOpacity: 0.15
+      fillOpacity: 0.2
     }).addTo(map);
 
     map.setView(pos, 18);
@@ -117,3 +98,4 @@
 
 </body>
 </html>
+

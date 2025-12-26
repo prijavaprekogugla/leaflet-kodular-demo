@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Parking mapa</title>
+  <title>Live GPS</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -20,40 +20,8 @@
     }
 
     #map {
-      width: 100%;
       height: 100%;
-    }
-
-    /* ---- ZOOM DUGMAD ---- */
-    .leaflet-control-zoom {
-      display: flex;
-      flex-direction: row;
-      gap: 10px;
-      margin: 12px;
-    }
-
-    .leaflet-control-zoom a {
-      width: 48px;
-      height: 48px;
-      line-height: 48px;
-      font-size: 22px;
-      font-weight: bold;
-      background: #ffffff;
-      color: #333;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      text-align: center;
-      text-decoration: none;
-    }
-
-    /* Parking label */
-    .parking-label {
-      background: rgba(0, 0, 0, 0.75);
-      color: white;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: bold;
+      width: 100%;
     }
   </style>
 </head>
@@ -64,69 +32,40 @@
 
 <script>
   let map;
-  let carMarker = null;
-  let parkingMarker = null;
+  let liveMarker = null;
   let accuracyCircle = null;
 
   function initMap() {
-    map = L.map('map', {
-      zoomControl: false
-    }).setView([44.7866, 20.4489], 18);
+    map = L.map('map').setView([44.7866, 20.4489], 16);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19
     }).addTo(map);
-
-    // Custom zoom buttons bottom-right
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
   }
 
-  function updateCar(lat, lng) {
+  // Poziva se iz Kodulara
+  function updateLocation(lat, lng, accuracy) {
     const pos = [lat, lng];
 
-    if (!carMarker) {
-      carMarker = L.circleMarker(pos, {
-        radius: 7,
-        color: '#ff0000',
-        fillColor: '#ff0000',
+    if (!liveMarker) {
+      liveMarker = L.circleMarker(pos, {
+        radius: 8,
+        color: '#007bff',
+        fillColor: '#007bff',
         fillOpacity: 1
       }).addTo(map);
     } else {
-      carMarker.setLatLng(pos);
+      liveMarker.setLatLng(pos);
     }
-
-    map.setView(pos, 18);
-  }
-
-  function showParking(lat, lng) {
-    const pos = [lat, lng];
-
-    if (parkingMarker) {
-      map.removeLayer(parkingMarker);
-    }
-
-    parkingMarker = L.circleMarker(pos, {
-      radius: 8,
-      color: '#ff0000',
-      fillColor: '#ff0000',
-      fillOpacity: 1
-    }).addTo(map);
-
-    parkingMarker.bindTooltip("Ovde ste parkirali", {
-      permanent: true,
-      direction: "top",
-      offset: [0, -12],
-      className: "parking-label"
-    });
 
     if (accuracyCircle) {
       map.removeLayer(accuracyCircle);
     }
 
     accuracyCircle = L.circle(pos, {
-      radius: 15,
-      color: '#1e90ff',
-      fillColor: '#1e90ff',
+      radius: accuracy || 10,
+      color: '#007bff',
+      fillColor: '#007bff',
       fillOpacity: 0.2
     }).addTo(map);
 
@@ -138,3 +77,4 @@
 
 </body>
 </html>
+

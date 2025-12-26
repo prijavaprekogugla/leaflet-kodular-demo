@@ -20,41 +20,33 @@
     }
 
     #map {
-      width: 100%;
       height: 100%;
+      width: 100%;
     }
 
-    /* ---- ZOOM DUGMAD ---- */
-    .leaflet-control-zoom {
+    /* Dugme za centriranje mape */
+    .center-btn {
+      position: absolute;
+      bottom: 20px;
+      left: 20px; /* <<< DONJI LEVI UGAO */
+      width: 50px;
+      height: 50px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
       display: flex;
-      flex-direction: row;
-      gap: 10px;
-      margin: 12px;
-    }
-
-    .leaflet-control-zoom a {
-      width: 48px;
-      height: 48px;
-      line-height: 48px;
+      align-items: center;
+      justify-content: center;
       font-size: 24px;
-      font-weight: bold;
-      background: #ffffff;
-      color: #333;
-      border-radius: 10px;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-      text-align: center;
-      text-decoration: none;
+      cursor: pointer;
+      z-index: 1000;
     }
 
-    .leaflet-control-zoom a:hover {
-      background: #f0f0f0;
-    }
-
-    /* TEKST IZNAD MARKERA */
+    /* tekstualni balon */
     .parking-label {
       background: rgba(0, 0, 0, 0.75);
       color: white;
-      padding: 5px 10px;
+      padding: 6px 10px;
       border-radius: 6px;
       font-size: 14px;
       font-weight: bold;
@@ -66,6 +58,7 @@
 <body>
 
 <div id="map"></div>
+<div class="center-btn" onclick="centerMap()">📍</div>
 
 <script>
   let map;
@@ -74,16 +67,11 @@
 
   function initMap() {
     map = L.map('map', {
-      zoomControl: false
+      zoomControl: true
     }).setView([44.7866, 20.4489], 18);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19
-    }).addTo(map);
-
-    // Zoom dugmad dole desno
-    L.control.zoom({
-      position: 'bottomright'
     }).addTo(map);
   }
 
@@ -97,7 +85,6 @@
       map.removeLayer(accuracyCircle);
     }
 
-    // Parking marker (crvena tačka)
     parkingMarker = L.circleMarker(pos, {
       radius: 8,
       color: '#ff0000',
@@ -105,7 +92,6 @@
       fillOpacity: 1
     }).addTo(map);
 
-    // Tekst iznad markera
     parkingMarker.bindTooltip("Ovde ste parkirali", {
       permanent: true,
       direction: "top",
@@ -113,7 +99,6 @@
       className: "parking-label"
     });
 
-    // Plavi krug preciznosti
     accuracyCircle = L.circle(pos, {
       radius: 15,
       color: '#1e90ff',
@@ -122,6 +107,12 @@
     }).addTo(map);
 
     map.setView(pos, 18);
+  }
+
+  function centerMap() {
+    if (parkingMarker) {
+      map.setView(parkingMarker.getLatLng(), 18);
+    }
   }
 
   window.onload = initMap;

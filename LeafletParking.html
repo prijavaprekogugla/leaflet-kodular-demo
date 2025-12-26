@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Parking lokacija</title>
+  <title>Parking mapa</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -20,16 +20,29 @@
     }
 
     #map {
-      width: 100%;
       height: 100%;
+      width: 100%;
+    }
+
+    /* POVEĆANI ZOOM DUGMIĆI */
+    .leaflet-control-zoom a {
+      width: 48px;
+      height: 48px;
+      line-height: 48px;
+      font-size: 22px;
+      background-color: white;
+      color: #333;
+      border-radius: 8px;
+      margin: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
 
     /* Tekst iznad markera */
     .parking-label {
       background: rgba(0, 0, 0, 0.75);
       color: white;
-      padding: 4px 8px;
-      border-radius: 6px;
+      padding: 6px 10px;
+      border-radius: 8px;
       font-size: 14px;
       font-weight: bold;
       white-space: nowrap;
@@ -47,18 +60,24 @@
   let accuracyCircle = null;
 
   function initMap() {
-    map = L.map('map').setView([44.7866, 20.4489], 18);
+    map = L.map('map', {
+      zoomControl: false
+    }).setView([44.7866, 20.4489], 18);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap'
+      maxZoom: 19
+    }).addTo(map);
+
+    // Dodaj zoom dugmad dole desno
+    L.control.zoom({
+      position: 'bottomright'
     }).addTo(map);
   }
 
   function showParking(lat, lng) {
     const pos = [lat, lng];
 
-    // ukloni staro ako postoji
+    // ukloni prethodne markere
     if (parkingMarker) {
       map.removeLayer(parkingMarker);
     }
@@ -66,15 +85,15 @@
       map.removeLayer(accuracyCircle);
     }
 
-    // CRVENA TAČKA (marker)
+    // Crvena tačka (parking)
     parkingMarker = L.circleMarker(pos, {
-      radius: 7,
+      radius: 8,
       color: '#ff0000',
       fillColor: '#ff0000',
       fillOpacity: 1
     }).addTo(map);
 
-    // TEKST IZNAD MARKERA
+    // Tekst iznad markera
     parkingMarker.bindTooltip("Ovde ste parkirali", {
       permanent: true,
       direction: "top",
@@ -82,7 +101,7 @@
       className: "parking-label"
     });
 
-    // PLAVI KRUG (preciznost)
+    // Plavi krug (preciznost)
     accuracyCircle = L.circle(pos, {
       radius: 15,
       color: '#1e90ff',
@@ -93,9 +112,9 @@
     map.setView(pos, 18);
   }
 
+  // inicijalizacija mape
   window.onload = initMap;
 </script>
 
 </body>
 </html>
-

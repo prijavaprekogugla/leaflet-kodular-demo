@@ -10,6 +10,7 @@
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   />
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
@@ -23,7 +24,6 @@
       width: 100%;
     }
 
-    /* ===== CENTRIRAJ DUGME ===== */
     .center-control {
       position: absolute;
       bottom: 20px;
@@ -35,13 +35,12 @@
     }
 
     .center-label {
-      background: rgba(0,0,0,0.75);
+      background: rgba(0, 0, 0, 0.7);
       color: white;
       padding: 4px 10px;
       border-radius: 10px;
       font-size: 13px;
       margin-bottom: 6px;
-      font-family: Arial, sans-serif;
     }
 
     .center-btn {
@@ -55,27 +54,26 @@
       box-shadow: 0 3px 8px rgba(0,0,0,0.3);
     }
 
-    /* horizontal line */
-    .center-btn::before {
+    .center-btn::before,
+    .center-btn::after {
       content: "";
       position: absolute;
+      background: #1e90ff;
+    }
+
+    .center-btn::before {
       top: 50%;
       left: 8px;
       right: 8px;
       height: 2px;
-      background: #1e90ff;
       transform: translateY(-50%);
     }
 
-    /* vertical line */
     .center-btn::after {
-      content: "";
-      position: absolute;
       left: 50%;
       top: 8px;
       bottom: 8px;
       width: 2px;
-      background: #1e90ff;
       transform: translateX(-50%);
     }
   </style>
@@ -95,6 +93,12 @@
   let parkingMarker = null;
   let accuracyCircle = null;
 
+  const carIcon = L.icon({
+    iconUrl: 'car.png',   // <--- OVDE STAVI SLIKU
+    iconSize: [40, 40],
+    iconAnchor: [20, 20]
+  });
+
   function initMap() {
     map = L.map('map', {
       zoomControl: true
@@ -108,22 +112,17 @@
   function showParking(lat, lng) {
     const pos = [lat, lng];
 
-    if (parkingMarker) map.removeLayer(parkingMarker);
-    if (accuracyCircle) map.removeLayer(accuracyCircle);
+    if (parkingMarker) {
+      map.removeLayer(parkingMarker);
+    }
+    if (accuracyCircle) {
+      map.removeLayer(accuracyCircle);
+    }
 
-    parkingMarker = L.circleMarker(pos, {
-      radius: 8,
-      color: '#ff0000',
-      fillColor: '#ff0000',
-      fillOpacity: 1
-    }).addTo(map);
+    // IKONICA AUTA
+    parkingMarker = L.marker(pos, { icon: carIcon }).addTo(map);
 
-    parkingMarker.bindTooltip("Ovde ste parkirali", {
-      permanent: true,
-      direction: "top",
-      offset: [0, -12]
-    });
-
+    // KRUG PRECIZNOSTI
     accuracyCircle = L.circle(pos, {
       radius: 15,
       color: '#1e90ff',
